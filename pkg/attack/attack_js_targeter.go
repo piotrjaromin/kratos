@@ -1,0 +1,5 @@
+package attack
+
+func CreateTargeter() {
+
+}
