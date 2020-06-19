@@ -11,7 +11,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-var requiredServerFlags = []string{"mode"}
 var validModesWithDefaultPorts = map[server.Mode]string{
 	server.Slave:  "8081",
 	server.Master: "8080",
@@ -30,15 +29,12 @@ func StartServer(logger *log.Logger, conf *config.Config) cli.Command {
 				Usage: "Port on which server should be started, if not provided default values will be used",
 			},
 			cli.StringFlag{
-				Name:  "mode",
-				Usage: fmt.Sprintf("Mode in which server should be started, validModes are %s", strings.Join(validModes, ", ")),
+				Name:     "mode",
+				Usage:    fmt.Sprintf("Mode in which server should be started, validModes are %s", strings.Join(validModes, ", ")),
+				Required: true,
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := validateRequiredFlags(c, requiredServerFlags); err != nil {
-				return err
-			}
-
 			port := c.String("port")
 			mode := server.Mode(c.String("mode"))
 

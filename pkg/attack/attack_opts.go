@@ -23,15 +23,12 @@ type Opts struct {
 }
 
 // DefaultOpts creates default opts for test
-func DefaultOpts(name string) Opts {
+func DefaultOpts(name string, duration time.Duration, rate vegeta.Pacer) Opts {
 	return Opts{
-		Name:     name,
-		Duration: time.Second * 5,
-		Timeout:  time.Second,
-		Rate: vegeta.ConstantPacer{
-			Freq: 50,
-			Per:  time.Second,
-		},
+		Name:           name,
+		Duration:       time.Second * 5,
+		Timeout:        time.Second * 3,
+		Rate:           rate,
 		Workers:        4,
 		MaxWorkers:     8,
 		Connections:    50,

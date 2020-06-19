@@ -12,7 +12,7 @@ func validateRequiredFlags(c *cli.Context, flags []string) error {
 
 	for _, f := range flags {
 		if len(c.String(f)) == 0 {
-			errMsg = fmt.Sprintf("%s\nMissing required flag --%s", errMsg, f)
+			errMsg = fmt.Sprintf("%sMissing required flag -%s\n", errMsg, f)
 		}
 	}
 

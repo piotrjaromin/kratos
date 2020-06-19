@@ -30,6 +30,4 @@ func Run(out io.Writer, atk *vegeta.Attacker, targeter vegeta.Targeter, opts Opt
 			}
 		}
 	}
-
-	return nil
 }

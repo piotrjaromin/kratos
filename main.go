@@ -32,6 +32,7 @@ func main() {
 
 	app.Commands = []cli.Command{
 		cmd.StartServer(logger, conf),
+		cmd.TestRun(logger, conf),
 	}
 
 	app.Name = "Performance/load testing tool with built in server"

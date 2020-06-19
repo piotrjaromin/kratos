@@ -9,6 +9,7 @@ require (
 	github.com/labstack/gommon v0.3.0
 	github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
 	github.com/sirupsen/logrus v1.6.0
+	github.com/stretchr/testify v1.5.1
 	github.com/thoas/go-funk v0.6.0
 	github.com/tsenart/vegeta/v12 v12.8.3
 	github.com/urfave/cli v1.22.4
