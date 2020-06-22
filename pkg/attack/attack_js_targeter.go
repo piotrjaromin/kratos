@@ -1,13 +1,18 @@
 package attack
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"runtime"
+	"strconv"
 
 	"github.com/robertkrimen/otto"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
+
+	"sync/atomic"
 
 	"github.com/thoas/go-funk"
 )
@@ -24,19 +29,25 @@ func TestFileProvider(fileName string) (TestProvider, error) {
 func CreateTargeter(testFile TestProvider) vegeta.Targeter {
 	content := testFile()
 	script := string(content)
-	vm := otto.New()
 
-	firstRun := true
+	vms := make(map[uint64]*otto.Otto)
+
+	var requestCount int64 = -1
 	return func(t *vegeta.Target) (err error) {
-		if firstRun {
+		newVal := atomic.AddInt64(&requestCount, 1)
+
+		gid := getGID()
+		vm, ok := vms[gid]
+
+		if !ok {
+			vm = otto.New()
 			if _, err := vm.Run(script); err != nil {
 				return fmt.Errorf("Unable to parse test file. Details: %s", err.Error())
 			}
-
-			firstRun = false
+			vms[gid] = vm
 		}
 
-		value, err := vm.Run(`getRequestOptions();`)
+		value, err := vm.Run(fmt.Sprintf("getRequestOptions(%d)", newVal))
 		if err != nil {
 			return fmt.Errorf("'getRequestOptions()' run fail. Details: %s", err.Error())
 		}
@@ -111,4 +122,13 @@ func getStringValue(src *otto.Object, srcFieldName string) (string, error) {
 	}
 
 	return field.String(), nil
+}
+
+func getGID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
 }
