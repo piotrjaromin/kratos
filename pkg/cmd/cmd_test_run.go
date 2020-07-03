@@ -84,7 +84,8 @@ func TestRun(logger *log.Logger, conf *config.Config) cli.Command {
 				return fmt.Errorf("Error during test run. Details: %s", err.Error())
 			}
 
-			if err := attack.Report(out, "text", "", 0); err != nil {
+			bucketStr := "" // If this will be used it cannot be empty
+			if err := attack.Report(out, "json", bucketStr, 0); err != nil {
 				return fmt.Errorf("Error during test report generation. Details: %s", err.Error())
 			}
 

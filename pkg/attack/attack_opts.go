@@ -26,7 +26,7 @@ type Opts struct {
 func DefaultOpts(name string, duration time.Duration, rate vegeta.Pacer) Opts {
 	return Opts{
 		Name:           name,
-		Duration:       time.Second * 5,
+		Duration:       duration,
 		Timeout:        time.Second * 3,
 		Rate:           rate,
 		Workers:        4,

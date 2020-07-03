@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"github.com/piotrjaromin/kratos/pkg/utils"
@@ -24,44 +23,9 @@ func Report(attackData io.Reader, typ, bucketsStr string, every time.Duration) e
 		return err
 	}
 
-	var (
-		rep    vegeta.Reporter
-		report vegeta.Report
-	)
-
-	switch typ {
-	case "text":
-		var m vegeta.Metrics
-		rep, report = vegeta.NewTextReporter(&m), &m
-	case "json":
-		var m vegeta.Metrics
-		if bucketsStr != "" {
-			m.Histogram = &vegeta.Histogram{}
-			if err := m.Histogram.Buckets.UnmarshalText([]byte(bucketsStr)); err != nil {
-				return err
-			}
-		}
-		rep, report = vegeta.NewJSONReporter(&m), &m
-	case "hdrplot":
-		var m vegeta.Metrics
-		rep, report = vegeta.NewHDRHistogramPlotReporter(&m), &m
-	default:
-		switch {
-		case strings.HasPrefix(typ, "hist"):
-			var hist vegeta.Histogram
-			if bucketsStr == "" { // Old way
-				if len(typ) < 6 {
-					return fmt.Errorf("bad buckets: '%s'", typ[4:])
-				}
-				bucketsStr = typ[4:]
-			}
-			if err := hist.Buckets.UnmarshalText([]byte(bucketsStr)); err != nil {
-				return err
-			}
-			rep, report = vegeta.NewHistogramReporter(&hist), &hist
-		default:
-			return fmt.Errorf("unknown report type: %q", typ)
-		}
+	rep, report, err := getReport(typ, bucketsStr)
+	if err != nil {
+		return err
 	}
 
 	sigch := make(chan os.Signal, 1)
@@ -107,6 +71,34 @@ func decoder(contets io.Reader) (vegeta.Decoder, error) {
 	}
 
 	return vegeta.NewRoundRobinDecoder(dec), nil
+}
+
+func getReport(typ, bucketsStr string) (vegeta.Reporter, vegeta.Report, error) {
+	switch typ {
+
+	case "text":
+		var m vegeta.Metrics
+		return vegeta.NewTextReporter(&m), &m, nil
+
+	case "json":
+		var m vegeta.Metrics
+		return vegeta.NewJSONReporter(&m), &m, nil
+
+	case "hdrplot":
+		var m vegeta.Metrics
+		return vegeta.NewHDRHistogramPlotReporter(&m), &m, nil
+
+	case "hist":
+		var hist vegeta.Histogram
+		if err := hist.Buckets.UnmarshalText([]byte(bucketsStr)); err != nil {
+			return nil, nil, err
+		}
+		return vegeta.NewHistogramReporter(&hist), &hist, nil
+
+	default:
+		return nil, nil, fmt.Errorf("unknown report type: %q", typ)
+	}
+
 }
 
 func writeReport(r vegeta.Reporter, rc vegeta.Closer, out io.Writer) error {

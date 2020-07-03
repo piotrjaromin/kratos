@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"sync"
 
 	"github.com/robertkrimen/otto"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
@@ -30,6 +31,8 @@ func CreateTargeter(testFile TestProvider) vegeta.Targeter {
 	content := testFile()
 	script := string(content)
 
+	var mutex = &sync.Mutex{}
+
 	vms := make(map[uint64]*otto.Otto)
 
 	var requestCount int64 = -1
@@ -44,7 +47,10 @@ func CreateTargeter(testFile TestProvider) vegeta.Targeter {
 			if _, err := vm.Run(script); err != nil {
 				return fmt.Errorf("Unable to parse test file. Details: %s", err.Error())
 			}
+
+			mutex.Lock()
 			vms[gid] = vm
+			mutex.Unlock()
 		}
 
 		value, err := vm.Run(fmt.Sprintf("getRequestOptions(%d)", newVal))
