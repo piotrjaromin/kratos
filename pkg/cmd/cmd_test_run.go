@@ -85,7 +85,7 @@ func TestRun(logger *log.Logger, conf *config.Config) cli.Command {
 			}
 
 			bucketStr := "" // If this will be used it cannot be empty
-			if err := attack.Report(out, "json", bucketStr, 0); err != nil {
+			if err := attack.Report(out, "img", bucketStr, 10); err != nil {
 				return fmt.Errorf("Error during test report generation. Details: %s", err.Error())
 			}
 

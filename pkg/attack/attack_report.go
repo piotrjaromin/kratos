@@ -7,9 +7,58 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/piotrjaromin/kratos/pkg/plot"
 	"github.com/piotrjaromin/kratos/pkg/utils"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
+
+type ImgReport struct {
+	data plot.Data
+	vegeta.Metrics
+}
+
+func NewImgReport() (*ImgReport, *vegeta.Metrics) {
+	var m vegeta.Metrics
+	plotLines := []plot.Lines{
+		{
+			LineTitle: "service",
+			Points:    []plot.Point{},
+		},
+	}
+
+	data := plot.Data{
+		LabelXName: "time",
+		LabelYName: "rps",
+		PlotName:   "RPS",
+		PlotLines:  plotLines,
+	}
+
+	return &ImgReport{
+		data: data,
+	}, &m
+}
+
+func (i *ImgReport) Add(res *vegeta.Result) {
+	i.Metrics.Add(res)
+
+	_, hour, min := i.End.Clock()
+
+	point := plot.Point{
+		X: fmt.Sprintf("%d:%d", hour, min),
+		Y: i.Rate,
+	}
+
+	i.data.PlotLines[0].Points = append(i.data.PlotLines[0].Points, point)
+}
+
+func (i *ImgReport) Draw() error {
+	file, err := os.Create("./plot.html")
+	if err != nil {
+		return err
+	}
+
+	return plot.Draw(i.data, file)
+}
 
 func Report(attackData io.Reader, typ, bucketsStr string, every time.Duration) error {
 	out, err := utils.File("stdout", true)
@@ -23,7 +72,7 @@ func Report(attackData io.Reader, typ, bucketsStr string, every time.Duration) e
 		return err
 	}
 
-	rep, report, err := getReport(typ, bucketsStr)
+	reporter, report, err := getReport(typ, bucketsStr)
 	if err != nil {
 		return err
 	}
@@ -45,7 +94,7 @@ decode:
 		case <-sigch:
 			break decode
 		case <-ticks:
-			if err = writeReport(rep, rc, out); err != nil {
+			if err = writeReport(reporter, rc, out); err != nil {
 				return err
 			}
 		default:
@@ -61,7 +110,13 @@ decode:
 		}
 	}
 
-	return writeReport(rep, rc, out)
+	img, ok := report.(*ImgReport)
+
+	if ok {
+		return img.Draw()
+	}
+
+	return writeReport(reporter, rc, out)
 }
 
 func decoder(contets io.Reader) (vegeta.Decoder, error) {
@@ -83,6 +138,10 @@ func getReport(typ, bucketsStr string) (vegeta.Reporter, vegeta.Report, error) {
 	case "json":
 		var m vegeta.Metrics
 		return vegeta.NewJSONReporter(&m), &m, nil
+
+	case "img":
+		img, m := NewImgReport()
+		return vegeta.NewJSONReporter(m), img, nil
 
 	case "hdrplot":
 		var m vegeta.Metrics
