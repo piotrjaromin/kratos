@@ -66,21 +66,21 @@ func TestRun(logger *log.Logger, conf *config.Config) cli.Command {
 			rps := c.Int("max-rps")
 
 			logger.Infof("Rps are %+v, test duration is %+v, ramp up time is %+v\n", rps, duration, rampupTime)
-			// rate := attack.NewRampUpPacer(rampupTime, rps)
+			rate := attack.NewRampUpPacer(rampupTime, rps)
 			// rate := vegeta.ConstantPacer{
 			// 	Freq: rps,
 			// 	Per:  time.Second,
 			// }
 
-			slope := (float64(rps) / float64(rampupTime+duration)) * float64(time.Second)
-			logger.Infof("Slope is %+v\n", slope)
-			rate := vegeta.LinearPacer{
-				StartAt: vegeta.ConstantPacer{
-					Freq: 0,
-					Per:  time.Second,
-				},
-				Slope: slope,
-			}
+			// slope := (float64(rps) / float64(rampupTime+duration)) * float64(time.Second)
+			// logger.Infof("Slope is %+v\n", slope)
+			// rate := vegeta.LinearPacer{
+			// 	StartAt: vegeta.ConstantPacer{
+			// 		Freq: 0,
+			// 		Per:  time.Second,
+			// 	},
+			// 	Slope: slope,
+			// }
 
 			testDuration := rampupTime + duration
 			opts := attack.DefaultOpts(log.GetCLILogger(), testFile, testDuration, rate)

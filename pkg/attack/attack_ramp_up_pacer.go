@@ -46,15 +46,9 @@ func (p *rampUpPacer) Pace(elapsed time.Duration, hits uint64) (time.Duration, b
 		fmt.Println("Pacer switch")
 		p.currentPacer = p.constPacer
 		p.pacerSwitched = true
-
-		e := time.Now().Sub(p.start)
-		fmt.Printf("Time taken %+v\n", e)
 	}
 
-	t, b := p.currentPacer.Pace(elapsed, hits)
-	fmt.Printf("!!! Pace is %+v and %+v, paccer used %+v\n", t, b, p.currentPacer)
-	return t, b
-	// return p.currentPacer.Pace(elapsed, hits)
+	return p.currentPacer.Pace(elapsed, hits)
 }
 
 func (p *rampUpPacer) Rate(elapsed time.Duration) float64 {

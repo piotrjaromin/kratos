@@ -35,7 +35,6 @@ func NewImgReport() (*ImgReport, *vegeta.Metrics) {
 }
 
 func (i *ImgReport) Add(res *vegeta.Result) {
-	fmt.Printf(">>> %+v - %+v - %+v \n", res.Code, res.Error, string(res.Body))
 	i.Metrics.Add(res)
 
 	_, hour, min := i.End.Clock()
