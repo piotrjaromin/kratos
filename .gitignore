@@ -1,2 +1,4 @@
 bin/
 trash/
+.vscode
+plot.html

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/piotrjaromin/kratos/pkg/log"
 	"github.com/stretchr/testify/require"
-
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
@@ -31,7 +31,7 @@ func TestCreateTargeterShouldCreateRequestFromJsScript(t *testing.T) {
 
 	testProvider := func() []byte { return []byte(testFile) }
 
-	targeter := CreateTargeter(testProvider)
+	targeter := CreateTargeter(log.GetCLILogger(), testProvider)
 	require.NotNil(t, targeter)
 
 	target := &vegeta.Target{}
@@ -68,7 +68,7 @@ func TestCreateTargeterShouldCallGetRequestOptions(t *testing.T) {
 
 	testProvider := func() []byte { return []byte(testFile) }
 
-	targeter := CreateTargeter(testProvider)
+	targeter := CreateTargeter(log.GetCLILogger(), testProvider)
 	require.NotNil(t, targeter)
 
 	assertTarget := func(expectedUrl string) {

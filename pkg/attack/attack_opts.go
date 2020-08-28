@@ -4,6 +4,8 @@ import (
 	"time"
 
 	vegeta "github.com/tsenart/vegeta/v12/lib"
+
+	"github.com/piotrjaromin/kratos/pkg/log"
 )
 
 // Opts define details of how attack should be performed
@@ -20,10 +22,11 @@ type Opts struct {
 	MaxConnections int
 	MaxBody        int64
 	Keepalive      bool
+	Logger         *log.Logger
 }
 
 // DefaultOpts creates default opts for test
-func DefaultOpts(name string, duration time.Duration, rate vegeta.Pacer) Opts {
+func DefaultOpts(logger *log.Logger, name string, duration time.Duration, rate vegeta.Pacer) Opts {
 	return Opts{
 		Name:           name,
 		Duration:       duration,
@@ -35,5 +38,6 @@ func DefaultOpts(name string, duration time.Duration, rate vegeta.Pacer) Opts {
 		MaxConnections: 50,
 		MaxBody:        -1,
 		Keepalive:      false,
+		Logger:         logger,
 	}
 }

@@ -25,6 +25,12 @@ func TestRun(logger *log.Logger, conf *config.Config) cli.Command {
 				Usage:    "File with defined test",
 				Required: true,
 			},
+			cli.StringFlag{
+				Name:     "report-format",
+				Usage:    "output format for runned test",
+				Required: false,
+				Value:    "img",
+			},
 			cli.IntFlag{
 				Name:     "duration",
 				Usage:    fmt.Sprintf("How long test should be run (without ramp-up-time) [seconds]"),
@@ -59,10 +65,25 @@ func TestRun(logger *log.Logger, conf *config.Config) cli.Command {
 			rampupTime := time.Second * time.Duration(c.Int("ramp-up-time"))
 			rps := c.Int("max-rps")
 
-			rate := attack.NewRampUpPacer(rampupTime, rps)
+			logger.Infof("Rps are %+v, test duration is %+v, ramp up time is %+v\n", rps, duration, rampupTime)
+			// rate := attack.NewRampUpPacer(rampupTime, rps)
+			// rate := vegeta.ConstantPacer{
+			// 	Freq: rps,
+			// 	Per:  time.Second,
+			// }
+
+			slope := (float64(rps) / float64(rampupTime+duration)) * float64(time.Second)
+			logger.Infof("Slope is %+v\n", slope)
+			rate := vegeta.LinearPacer{
+				StartAt: vegeta.ConstantPacer{
+					Freq: 0,
+					Per:  time.Second,
+				},
+				Slope: slope,
+			}
 
 			testDuration := rampupTime + duration
-			opts := attack.DefaultOpts(testFile, testDuration, rate)
+			opts := attack.DefaultOpts(log.GetCLILogger(), testFile, testDuration, rate)
 			opts.Keepalive = keepAlive
 
 			out := &utils.StringWriterReader{}
@@ -70,22 +91,23 @@ func TestRun(logger *log.Logger, conf *config.Config) cli.Command {
 			atk := vegeta.NewAttacker(
 				vegeta.Timeout(opts.Timeout),
 				// vegeta.TLSConfig(tlsc),
+				// vegeta.KeepAlive(opts.Keepalive),
 				vegeta.Workers(opts.Workers),
 				vegeta.MaxWorkers(opts.MaxWorkers),
-				vegeta.KeepAlive(opts.Keepalive),
 				vegeta.Connections(opts.Connections),
 				vegeta.MaxConnections(opts.MaxConnections),
 				vegeta.HTTP2(opts.HTTP2),
 				vegeta.MaxBody(opts.MaxBody),
 			)
 
-			tr := attack.CreateTargeter(testContents)
+			tr := attack.CreateTargeter(opts.Logger, testContents)
 			if err := attack.Run(out, atk, tr, opts); err != nil {
 				return fmt.Errorf("Error during test run. Details: %s", err.Error())
 			}
 
+			reportFormat := c.String("report-format")
 			bucketStr := "" // If this will be used it cannot be empty
-			if err := attack.Report(out, "img", bucketStr, 10); err != nil {
+			if err := attack.Report(out, reportFormat, bucketStr, 10); err != nil {
 				return fmt.Errorf("Error during test report generation. Details: %s", err.Error())
 			}
 

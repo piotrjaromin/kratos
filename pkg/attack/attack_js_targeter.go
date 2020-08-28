@@ -16,6 +16,8 @@ import (
 	"sync/atomic"
 
 	"github.com/thoas/go-funk"
+
+	"github.com/piotrjaromin/kratos/pkg/log"
 )
 
 type TestProvider func() []byte
@@ -27,7 +29,7 @@ func TestFileProvider(fileName string) (TestProvider, error) {
 	}, err
 }
 
-func CreateTargeter(testFile TestProvider) vegeta.Targeter {
+func CreateTargeter(logger *log.Logger, testFile TestProvider) vegeta.Targeter {
 	content := testFile()
 	script := string(content)
 

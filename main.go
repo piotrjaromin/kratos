@@ -27,12 +27,16 @@ func main() {
 		panic(err)
 	}
 
-	logger := log.GetLogger(conf)
+	logger := log.GetLogger(log.AppInfo{
+		Version:  conf.AppInfo.Version,
+		LogLevel: conf.Log.Level,
+	})
+
 	app := cli.NewApp()
 
 	app.Commands = []cli.Command{
 		cmd.StartServer(logger, conf),
-		cmd.TestRun(logger, conf),
+		cmd.TestRun(log.GetCLILogger(), conf),
 	}
 
 	app.Name = "Performance/load testing tool with built in server"
