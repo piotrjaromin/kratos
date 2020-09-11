@@ -7,7 +7,6 @@
 3. Create master that will sync all nodes, gather metrics at the end of test
 4. Gather metrics at interval from tests
 
-
 ## Cli
 
 kratos has 3 basic functionalities:
@@ -16,16 +15,15 @@ kratos has 3 basic functionalities:
 - start server in master mode which controls slaves to start tests and collect metrics
 - start server in slave mode which connects to master and runs tests
 
-
 ## Development
 
 Command to run
-```
-go run main.go attack -test-file=./example/mock-server.js -duration=60 -ramp-up-time=20 -max-rps=50
+
+```bash
+go run main.go attack -test-file=./mock-server/mock-attack.js -duration=60 -ramp-up-time=20 -max-rps=50
 ```
 
 ## TODO
 
-- pacer vs users ramup
 - targeter creation
 - default options from command line
